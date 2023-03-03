@@ -17,6 +17,7 @@ iterator.
 You'll edit this file in Tasks 3a and 3c.
 """
 import operator
+from itertools import islice
 
 
 class UnsupportedCriterionError(NotImplementedError):
@@ -38,6 +39,7 @@ class AttributeFilter:
     Concrete subclasses can override the `get` classmethod to provide custom
     behavior to fetch a desired attribute from the given `CloseApproach`.
     """
+
     def __init__(self, op, value):
         """Construct a new `AttributeFilter` from an binary predicate and a reference value.
 
@@ -70,6 +72,46 @@ class AttributeFilter:
 
     def __repr__(self):
         return f"{self.__class__.__name__}(op=operator.{self.op.__name__}, value={self.value})"
+
+
+class DateFilter(AttributeFilter):
+    """DateFilter class is a child of AttributeFilter"""
+    @classmethod
+    def get(cls, approach):
+        """Return approach's date attribute"""
+        return approach.time.date()
+
+
+class DistanceFilter(AttributeFilter):
+    """DistanceFilter class is a child of AttributeFilter"""
+    @classmethod
+    def get(cls, approach):
+        """Return approach's distance attribute"""
+        return approach.distance
+
+
+class VelocityFilter(AttributeFilter):
+    """VelocityFilter class is a child of AttributeFilter"""
+    @classmethod
+    def get(cls, approach):
+        """Return approach's velocity attribute"""
+        return approach.velocity
+
+
+class DiameterFilter(AttributeFilter):
+    """DiameterFilter class is a child of AttributeFilter"""
+    @classmethod
+    def get(cls, approach):
+        """Return neo's diameter attribute"""
+        return approach.neo.diameter
+
+
+class HazardousFilter(AttributeFilter):
+    """HazardousFilter class is a child of AttributeFilter"""
+    @classmethod
+    def get(cls, approach):
+        """Return neo's hazardous attribute"""
+        return approach.neo.hazardous
 
 
 def create_filters(
@@ -108,8 +150,40 @@ def create_filters(
     :param hazardous: Whether the NEO of a matching `CloseApproach` is potentially hazardous.
     :return: A collection of filters for use with `query`.
     """
-    # TODO: Decide how you will represent your filters.
-    return ()
+    # ELABORATE: Decide how you will represent your filters.
+    filters = []
+
+    if date:
+        filters.append(DateFilter(operator.eq, date))
+
+    if start_date:
+        filters.append(DateFilter(operator.ge, start_date))
+
+    if end_date:
+        filters.append(DateFilter(operator.le, end_date))
+
+    if distance_min:
+        filters.append(DistanceFilter(operator.ge, distance_min))
+
+    if distance_max:
+        filters.append(DistanceFilter(operator.le, distance_max))
+
+    if velocity_min:
+        filters.append(VelocityFilter(operator.ge, velocity_min))
+
+    if velocity_max:
+        filters.append(VelocityFilter(operator.le, velocity_max))
+
+    if diameter_min:
+        filters.append(DiameterFilter(operator.ge, diameter_min))
+
+    if diameter_max:
+        filters.append(DiameterFilter(operator.le, diameter_max))
+
+    if hazardous is not None:
+        filters.append(HazardousFilter(operator.eq, hazardous))
+
+    return filters
 
 
 def limit(iterator, n=None):
@@ -121,5 +195,7 @@ def limit(iterator, n=None):
     :param n: The maximum number of values to produce.
     :yield: The first (at most) `n` values from the iterator.
     """
-    # TODO: Produce at most `n` values from the given iterator.
-    return iterator
+    # ELABORATE: Produce at most `n` values from the given iterator.
+    if n is not None and n != 0:
+        return islice(iterator, n)
+    return islice(iterator, None)
